@@ -1,0 +1,157 @@
+/* Error Recovery Component */
+.error-recovery {
+  width: 100%;
+  max-width: 520px;
+  margin: 1.5rem auto;
+  padding: 20px 24px;
+  background: #fff;
+  border: 1px solid #f0d0d0;
+  border-radius: 12px;
+  text-align: left;
+}
+
+.error-recovery__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.error-recovery__icon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.error-recovery__title {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #721c24;
+  font-weight: 600;
+}
+
+.error-recovery__message {
+  font-size: 14px;
+  color: #555;
+  margin: 0 0 16px;
+  line-height: 1.5;
+}
+
+/* Status banner */
+.error-recovery__status {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.error-recovery__status--processing {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.error-recovery__status--completed {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.error-recovery__status--failed {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.error-recovery__status--pending {
+  background-color: #cce5ff;
+  color: #004085;
+}
+
+/* Action buttons */
+.error-recovery__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.error-recovery__btn {
+  padding: 8px 18px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, opacity 0.2s;
+}
+
+.error-recovery__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.error-recovery__btn--retry {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+}
+
+.error-recovery__btn--retry:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.error-recovery__btn--refund {
+  background-color: #e9ecef;
+  color: #495057;
+}
+
+.error-recovery__btn--refund:hover:not(:disabled) {
+  background-color: #dee2e6;
+}
+
+/* Support section */
+.error-recovery__support {
+  padding-top: 14px;
+  border-top: 1px solid #f0f0f0;
+  font-size: 13px;
+  color: #6c757d;
+  line-height: 1.6;
+}
+
+.error-recovery__support p {
+  margin: 0 0 4px;
+}
+
+.error-recovery__support a {
+  color: #667eea;
+  text-decoration: none;
+}
+
+.error-recovery__support a:hover {
+  text-decoration: underline;
+}
+
+/* Admin stub */
+.error-recovery__admin-stub {
+  margin-top: 16px;
+  padding: 12px 14px;
+  background: #f8f9fa;
+  border: 1px dashed #dee2e6;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #6c757d;
+  text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .error-recovery {
+    margin: 1rem;
+    padding: 16px;
+  }
+
+  .error-recovery__actions {
+    flex-direction: column;
+  }
+
+  .error-recovery__btn {
+    width: 100%;
+    text-align: center;
+  }
+}

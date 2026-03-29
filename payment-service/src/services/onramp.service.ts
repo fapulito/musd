@@ -5,7 +5,6 @@ import { User } from '../models/User';
 import { Quote } from '../models/Quote';
 import { logger } from '../utils/logger';
 import { AppError } from '../middleware/errorHandler';
-import Stripe from 'stripe';
 
 export class OnrampService {
   private onrampSessionRepository = AppDataSource.getRepository(OnrampSession);
@@ -179,7 +178,8 @@ export class OnrampService {
   }
 
   /**
-   * Get quote for fiat-to-MUSD conversion
+   * Get quote for fiat-to-MUSD conversion with caching
+   * Implements Requirements 7.1-7.5: Fee display and real-time calculations
    */
   async getQuote(params: {
     sourceAmount: string;
@@ -189,32 +189,48 @@ export class OnrampService {
     destinationAmount: string;
     exchangeRate: string;
     fees: {
+      stripeFee: string;
       networkFee: string;
-      transactionFee: string;
       totalFee: string;
     };
+    netAmount: string;
+    sourceAmount: string;
+    sourceCurrency: string;
+    destinationCurrency: string;
+    expiresAt: string;
   }> {
     try {
       const { sourceAmount, sourceCurrency, destinationCurrency } = params;
-
-      // Note: Stripe Crypto Onramp doesn't have a direct quote API
-      // This is a simplified implementation
-      // In production, you would integrate with Stripe's pricing or use market rates
-
       const amount = parseFloat(sourceAmount);
-      
-      // Simplified fee calculation (3.5% for card payments)
-      const feePercentage = 0.035;
-      const transactionFee = amount * feePercentage;
-      const networkFee = 0.5; // Estimated network fee in USD
-      const totalFee = transactionFee + networkFee;
-      
-      // Simplified exchange rate (1 USD = 1 MUSD minus fees)
-      const netAmount = amount - totalFee;
-      const destinationAmount = netAmount;
-      const exchangeRate = 1.0;
 
-      // Save quote to database
+      if (isNaN(amount) || amount <= 0) {
+        throw new AppError(400, 'sourceAmount must be a positive number');
+      }
+
+      // Check cache for a recent quote with same parameters
+      const cached = await this.getCachedQuote(amount, sourceCurrency, destinationCurrency);
+      if (cached) {
+        logger.info('Returning cached quote', { quoteId: cached.id });
+        return this.formatQuoteResponse(cached);
+      }
+
+      // Requirement 7.1: Stripe processing fee (2.9% + $0.30)
+      const stripePercentage = 0.029;
+      const stripeFixed = 0.30;
+      const stripeFee = amount * stripePercentage + stripeFixed;
+
+      // Network fee estimate
+      const networkFee = 0.50;
+      const totalFee = stripeFee + networkFee;
+
+      // Exchange rate: 1 USD = 1 MUSD (stablecoin peg)
+      const exchangeRate = 1.0;
+      const netAmount = Math.max(amount - totalFee, 0);
+      const destinationAmount = netAmount * exchangeRate;
+
+      const validUntil = new Date(Date.now() + 60000); // 60 seconds
+
+      // Save quote to database for tracking
       const quote = this.quoteRepository.create({
         sourceAmount: amount,
         sourceCurrency,
@@ -222,28 +238,82 @@ export class OnrampService {
         destinationCurrency,
         exchangeRate,
         fees: {
-          networkFee: networkFee.toString(),
-          transactionFee: transactionFee.toString(),
-          totalFee: totalFee.toString(),
+          stripeFee: stripeFee.toFixed(2),
+          networkFee: networkFee.toFixed(2),
+          totalFee: totalFee.toFixed(2),
         },
-        validUntil: new Date(Date.now() + 60000), // Valid for 60 seconds
+        validUntil,
       });
 
       await this.quoteRepository.save(quote);
 
-      return {
-        destinationAmount: destinationAmount.toFixed(6),
-        exchangeRate: exchangeRate.toFixed(8),
-        fees: {
-          networkFee: networkFee.toFixed(2),
-          transactionFee: transactionFee.toFixed(2),
-          totalFee: totalFee.toFixed(2),
-        },
-      };
+      logger.info('Created new quote', { quoteId: quote.id, sourceAmount: amount });
+
+      return this.formatQuoteResponse(quote);
     } catch (error) {
       logger.error('Error getting quote', { error });
+      if (error instanceof AppError) throw error;
       throw new AppError(500, 'Failed to get quote');
     }
+  }
+
+  /**
+   * Look up a cached quote that matches the parameters and is still valid
+   */
+  private async getCachedQuote(
+    sourceAmount: number,
+    sourceCurrency: string,
+    destinationCurrency: string
+  ): Promise<Quote | null> {
+    try {
+      const quote = await this.quoteRepository
+        .createQueryBuilder('quote')
+        .where('quote.source_amount = :sourceAmount', { sourceAmount })
+        .andWhere('quote.source_currency = :sourceCurrency', { sourceCurrency })
+        .andWhere('quote.destination_currency = :destinationCurrency', { destinationCurrency })
+        .andWhere('quote.valid_until > :now', { now: new Date() })
+        .orderBy('quote.created_at', 'DESC')
+        .getOne();
+
+      return quote;
+    } catch (error) {
+      logger.warn('Quote cache lookup failed, will create new quote', { error });
+      return null;
+    }
+  }
+
+  /**
+   * Format a Quote entity into the API response shape
+   */
+  private formatQuoteResponse(quote: Quote): {
+    destinationAmount: string;
+    exchangeRate: string;
+    fees: {
+      stripeFee: string;
+      networkFee: string;
+      totalFee: string;
+    };
+    netAmount: string;
+    sourceAmount: string;
+    sourceCurrency: string;
+    destinationCurrency: string;
+    expiresAt: string;
+  } {
+    const fees = (quote.fees as Record<string, string>) || {};
+    return {
+      destinationAmount: Number(quote.destinationAmount).toFixed(6),
+      exchangeRate: Number(quote.exchangeRate).toFixed(8),
+      fees: {
+        stripeFee: fees.stripeFee || '0.00',
+        networkFee: fees.networkFee || '0.00',
+        totalFee: fees.totalFee || '0.00',
+      },
+      netAmount: Number(quote.destinationAmount).toFixed(2),
+      sourceAmount: Number(quote.sourceAmount).toFixed(2),
+      sourceCurrency: quote.sourceCurrency,
+      destinationCurrency: quote.destinationCurrency,
+      expiresAt: quote.validUntil?.toISOString() || new Date(Date.now() + 60000).toISOString(),
+    };
   }
 
   /**

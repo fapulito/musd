@@ -1,0 +1,136 @@
+/* KYC Banner Component */
+.kyc-banner {
+  width: 100%;
+  max-width: 520px;
+  margin: 1rem auto;
+  padding: 16px 20px;
+  border-radius: 12px;
+  text-align: left;
+}
+
+.kyc-banner--compact {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+}
+
+.kyc-banner--compact .kyc-banner__text {
+  font-size: 14px;
+  color: #155724;
+  margin: 0;
+}
+
+/* Status variants */
+.kyc-banner--warning {
+  background-color: #fff3cd;
+  border: 1px solid #ffc107;
+}
+
+.kyc-banner--pending {
+  background-color: #cce5ff;
+  border: 1px solid #b8daff;
+}
+
+.kyc-banner--success {
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+}
+
+.kyc-banner--error {
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+}
+
+/* Header */
+.kyc-banner__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.kyc-banner__icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.kyc-banner__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.kyc-banner--warning .kyc-banner__title {
+  color: #856404;
+}
+
+.kyc-banner--pending .kyc-banner__title {
+  color: #004085;
+}
+
+.kyc-banner--error .kyc-banner__title {
+  color: #721c24;
+}
+
+/* Body */
+.kyc-banner__body {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.kyc-banner__message {
+  margin: 0 0 12px;
+  color: #555;
+}
+
+.kyc-banner__limit-info {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: #666;
+}
+
+.kyc-banner__limit-warning {
+  color: #e65100;
+  font-weight: 500;
+}
+
+/* Verify button */
+.kyc-banner__btn {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  transition: opacity 0.2s;
+}
+
+.kyc-banner__btn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.kyc-banner__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.kyc-banner__btn--retry {
+  background: #e9ecef;
+  color: #495057;
+}
+
+.kyc-banner__btn--retry:hover:not(:disabled) {
+  background: #dee2e6;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .kyc-banner {
+    margin: 0.75rem;
+    padding: 14px 16px;
+  }
+}

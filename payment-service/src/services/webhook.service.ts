@@ -3,6 +3,9 @@ import { stripe } from '../config/stripe.config';
 import { AppDataSource } from '../config/database';
 import { WebhookEvent } from '../models/WebhookEvent';
 import { onrampService } from './onramp.service';
+import { paymentService } from './payment.service';
+import { payoutService } from './payout.service';
+import { kycService } from './kyc.service';
 import { logger } from '../utils/logger';
 import { config } from '../config';
 
@@ -64,23 +67,33 @@ export class WebhookService {
           break;
 
         case 'payment_intent.succeeded':
-          // Will be implemented in task 3.2
-          logger.info('Payment intent succeeded', { eventId: event.id });
+          await this.handlePaymentSucceeded(event);
           break;
 
         case 'payment_intent.payment_failed':
-          // Will be implemented in task 3.2
-          logger.info('Payment intent failed', { eventId: event.id });
+          await this.handlePaymentFailed(event);
+          break;
+
+        case 'payment_intent.canceled':
+          await this.handlePaymentCanceled(event);
           break;
 
         case 'payout.paid':
-          // Will be implemented in task 4.1
-          logger.info('Payout paid', { eventId: event.id });
+          await this.handlePayoutPaid(event);
           break;
 
         case 'payout.failed':
-          // Will be implemented in task 4.1
-          logger.info('Payout failed', { eventId: event.id });
+          await this.handlePayoutFailed(event);
+          break;
+
+        case 'payout.canceled':
+          await this.handlePayoutCanceled(event);
+          break;
+
+        case 'identity.verification_session.verified' as any:
+        case 'identity.verification_session.requires_input' as any:
+        case 'identity.verification_session.canceled' as any:
+          await this.handleIdentityEvent(event);
           break;
 
         default:
@@ -154,6 +167,143 @@ export class WebhookService {
   }
 
   /**
+   * Handle payment_intent.succeeded event
+   * Requirements: 5.1, 5.2, 5.5
+   */
+  private async handlePaymentSucceeded(event: Stripe.Event): Promise<void> {
+    const pi = event.data.object as any;
+
+    logger.info('Payment intent succeeded', {
+      paymentIntentId: pi.id,
+      amount: pi.amount,
+      currency: pi.currency,
+    });
+
+    await paymentService.updatePaymentIntentFromWebhook(
+      pi.id,
+      'succeeded',
+      pi
+    );
+
+    // Trigger order fulfillment or service activation
+    this.emitPaymentSucceededEvent(pi);
+  }
+
+  /**
+   * Handle payment_intent.payment_failed event
+   * Requirements: 5.1, 5.2, 5.5
+   */
+  private async handlePaymentFailed(event: Stripe.Event): Promise<void> {
+    const pi = event.data.object as any;
+
+    logger.error('Payment intent failed', {
+      paymentIntentId: pi.id,
+      error: pi.last_payment_error?.message,
+    });
+
+    await paymentService.updatePaymentIntentFromWebhook(
+      pi.id,
+      'requires_payment_method',
+      pi
+    );
+  }
+
+  /**
+   * Handle payment_intent.canceled event
+   * Requirements: 5.1, 5.2, 5.5
+   */
+  private async handlePaymentCanceled(event: Stripe.Event): Promise<void> {
+    const pi = event.data.object as any;
+
+    logger.info('Payment intent canceled', {
+      paymentIntentId: pi.id,
+    });
+
+    await paymentService.updatePaymentIntentFromWebhook(
+      pi.id,
+      'canceled',
+      pi
+    );
+  }
+
+  /**
+   * Handle payout.paid event
+   * Requirements: 5.1, 5.2, 5.5
+   */
+  private async handlePayoutPaid(event: Stripe.Event): Promise<void> {
+    const payout = event.data.object as any;
+
+    logger.info('Payout paid', {
+      payoutId: payout.id,
+      amount: payout.amount,
+      currency: payout.currency,
+    });
+
+    await payoutService.updatePayoutFromWebhook(
+      payout.id,
+      'paid',
+      payout
+    );
+
+    // Notify user of payout completion
+    this.emitPayoutCompletedEvent(payout);
+  }
+
+  /**
+   * Handle payout.failed event
+   * Requirements: 5.1, 5.2, 5.5
+   */
+  private async handlePayoutFailed(event: Stripe.Event): Promise<void> {
+    const payout = event.data.object as any;
+
+    logger.error('Payout failed', {
+      payoutId: payout.id,
+      failureMessage: payout.failure_message,
+    });
+
+    await payoutService.updatePayoutFromWebhook(
+      payout.id,
+      'failed',
+      payout
+    );
+
+    // Notify user of payout failure
+    this.emitPayoutFailedEvent(payout);
+  }
+
+  /**
+   * Handle payout.canceled event
+   * Requirements: 5.1, 5.2, 5.5
+   */
+  private async handlePayoutCanceled(event: Stripe.Event): Promise<void> {
+    const payout = event.data.object as any;
+
+    logger.info('Payout canceled', {
+      payoutId: payout.id,
+    });
+
+    await payoutService.updatePayoutFromWebhook(
+      payout.id,
+      'canceled',
+      payout
+    );
+  }
+
+  /**
+   * Emit payment succeeded event for order fulfillment / service activation
+   */
+  private emitPaymentSucceededEvent(pi: any): void {
+    logger.info('Emitting payment succeeded event', {
+      paymentIntentId: pi.id,
+      amount: pi.amount,
+      currency: pi.currency,
+    });
+
+    // Placeholder: integrate with order fulfillment, notifications, etc.
+    // eventEmitter.emit('payment.succeeded', { paymentIntent: pi });
+  }
+
+  /**
    * Emit onramp completed event for application listeners
    */
   private emitOnrampCompletedEvent(session: any): void {
@@ -167,6 +317,55 @@ export class WebhookService {
 
     // Example: Trigger notifications, update analytics, etc.
     // eventEmitter.emit('onramp.completed', { session });
+  }
+
+  /**
+   * Emit payout completed event to notify user of successful payout
+   * Requirements: 5.1, 5.5
+   */
+  private emitPayoutCompletedEvent(payout: any): void {
+    logger.info('Emitting payout completed event', {
+      payoutId: payout.id,
+      amount: payout.amount,
+      currency: payout.currency,
+    });
+
+    // Placeholder: integrate with notification service, email, push, etc.
+    // eventEmitter.emit('payout.completed', { payout });
+  }
+
+  /**
+   * Emit payout failed event to notify user of payout failure
+   * Requirements: 5.1, 5.5
+   */
+  private emitPayoutFailedEvent(payout: any): void {
+    logger.info('Emitting payout failed event', {
+      payoutId: payout.id,
+      failureMessage: payout.failure_message,
+    });
+
+    // Placeholder: integrate with notification service, email, push, etc.
+    // eventEmitter.emit('payout.failed', { payout });
+  }
+
+  /**
+   * Handle Stripe Identity verification webhook events.
+   * Requirements: 6.3, 6.4
+   */
+  private async handleIdentityEvent(event: Stripe.Event): Promise<void> {
+    const session = event.data.object as any;
+
+    logger.info('Identity verification event received', {
+      eventType: event.type,
+      sessionId: session.id,
+      status: session.status,
+    });
+
+    await kycService.handleIdentityWebhook(event.type, {
+      id: session.id,
+      status: session.status,
+      metadata: session.metadata,
+    });
   }
 
   /**

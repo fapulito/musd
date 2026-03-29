@@ -1,0 +1,168 @@
+/* FeeDisplay */
+.fee-display {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 16px;
+  border: 1px solid #dee2e6;
+  border-radius: 10px;
+  background: #fff;
+  position: relative;
+}
+
+.fee-display--error {
+  background: #f8d7da;
+  border-color: #f5c6cb;
+  color: #721c24;
+}
+
+.fee-display--error p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.fee-display--loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px 16px;
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.fee-display__spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid #dee2e6;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: fee-spin 0.7s linear infinite;
+}
+
+@keyframes fee-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.fee-display__refreshing {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  font-size: 11px;
+  color: #667eea;
+  font-weight: 500;
+}
+
+/* Title */
+.fee-display__title {
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Rows (definition list) */
+.fee-display__rows {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fee-display__row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: #495057;
+  padding: 4px 0;
+}
+
+.fee-display__row dt {
+  font-weight: 500;
+}
+
+.fee-display__row dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.fee-display__deduction {
+  color: #dc3545;
+}
+
+.fee-display__row--total {
+  border-top: 1px solid #dee2e6;
+  padding-top: 8px;
+  font-weight: 600;
+}
+
+.fee-display__row--highlight {
+  border-top: 1px solid #dee2e6;
+  padding-top: 8px;
+}
+
+.fee-display__row--highlight dt,
+.fee-display__row--highlight dd {
+  font-weight: 700;
+  color: #28a745;
+  font-size: 15px;
+}
+
+/* Comparison table */
+.fee-display__comparison {
+  margin-top: 16px;
+  border-top: 1px solid #dee2e6;
+  padding-top: 12px;
+}
+
+.fee-display__comparison-title {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.fee-display__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.fee-display__table th {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 2px solid #dee2e6;
+  color: #6c757d;
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.fee-display__table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid #f0f0f0;
+  color: #333;
+}
+
+.fee-display__net {
+  font-weight: 600;
+  color: #28a745;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .fee-display {
+    padding: 12px;
+  }
+
+  .fee-display__row {
+    font-size: 13px;
+  }
+
+  .fee-display__table {
+    font-size: 12px;
+  }
+}

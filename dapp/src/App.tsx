@@ -45,7 +45,7 @@ function App() {
               <MUSDBalance />
               <div className="actions">
                 <BuyMUSDButton
-                  amount="100"
+                  defaultAmount="100"
                   onSuccess={() => {
                     console.log("MUSD purchase completed!")
                   }}

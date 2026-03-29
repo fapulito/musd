@@ -1,46 +1,39 @@
 import React, { useState } from "react"
 
 import { OnrampWidget } from "./OnrampWidget"
-import { useOnramp } from "../hooks/useOnramp"
+import { QuoteDisplay } from "./QuoteDisplay"
+import { useQuote } from "../hooks/useQuote"
 import { useWalletInfo } from "../hooks/useWalletInfo"
 
 interface BuyMUSDButtonProps {
-  amount?: string
+  defaultAmount?: string
   onSuccess?: () => void
 }
 
+/**
+ * Buy MUSD button with inline amount input and real-time quote display.
+ * Implements Requirement 7.5: fee calculations update in real-time as amount changes.
+ */
 export const BuyMUSDButton: React.FC<BuyMUSDButtonProps> = ({
-  amount,
+  defaultAmount = "100",
   onSuccess,
 }) => {
   const [showWidget, setShowWidget] = useState(false)
-  const [quote, setQuote] = useState<any>(null)
-  const { getQuote, loading } = useOnramp()
-  const { isConnected, matsnet } = useWalletInfo()
+  const [amount, setAmount] = useState(defaultAmount)
+  const { isConnected } = useWalletInfo()
 
-  const handleClick = async () => {
-    if (amount) {
-      // Fetch quote before showing widget
-      const quoteData = await getQuote({
-        sourceAmount: amount,
-        sourceCurrency: 'usd',
-        destinationCurrency: 'musd',
-      });
-      setQuote(quoteData);
-    }
-    setShowWidget(true);
-  };
+  // Real-time quote updates as user changes amount (Req 7.5)
+  const { quote, loading, error } = useQuote(amount)
 
   const handleSuccess = (session: any) => {
-    console.log('Onramp completed:', session);
-    setShowWidget(false);
-    onSuccess?.();
-  };
+    console.log("Onramp completed:", session)
+    setShowWidget(false)
+    onSuccess?.()
+  }
 
-  const handleError = (error: Error) => {
-    console.error('Onramp error:', error);
-    alert(`Error: ${error.message}`);
-  };
+  const handleError = (err: Error) => {
+    console.error("Onramp error:", err)
+  }
 
   if (showWidget) {
     return (
@@ -49,33 +42,28 @@ export const BuyMUSDButton: React.FC<BuyMUSDButtonProps> = ({
           <button
             className="onramp-modal-close"
             onClick={() => setShowWidget(false)}
+            aria-label="Close"
           >
             ×
           </button>
-          
-          {quote && (
-            <div className="onramp-quote">
-              <h3>Purchase Summary</h3>
-              <div className="quote-details">
-                <div className="quote-row">
-                  <span>Amount:</span>
-                  <span>${amount} USD</span>
-                </div>
-                <div className="quote-row">
-                  <span>Transaction Fee:</span>
-                  <span>${quote.fees.transactionFee}</span>
-                </div>
-                <div className="quote-row">
-                  <span>Network Fee:</span>
-                  <span>${quote.fees.networkFee}</span>
-                </div>
-                <div className="quote-row total">
-                  <span>You'll receive:</span>
-                  <span>{quote.destinationAmount} MUSD</span>
-                </div>
-              </div>
-            </div>
-          )}
+
+          <h3 style={{ margin: "0 0 16px" }}>Buy MUSD</h3>
+
+          <label className="amount-input-label" htmlFor="buy-amount">
+            Amount (USD)
+          </label>
+          <input
+            id="buy-amount"
+            className="amount-input"
+            type="number"
+            min="1"
+            step="any"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder="Enter amount"
+          />
+
+          <QuoteDisplay quote={quote} loading={loading} error={error} />
 
           <OnrampWidget
             sourceAmount={amount}
@@ -85,20 +73,16 @@ export const BuyMUSDButton: React.FC<BuyMUSDButtonProps> = ({
           />
         </div>
       </div>
-    );
+    )
   }
 
   return (
     <button
       className="buy-musd-button"
-      onClick={handleClick}
-      disabled={loading || !isConnected}
+      onClick={() => setShowWidget(true)}
+      disabled={!isConnected}
     >
-      {loading
-        ? "Loading..."
-        : isConnected
-          ? "Buy MUSD with Card"
-          : "Connect Wallet First"}
+      {isConnected ? "Buy MUSD with Card" : "Connect Wallet First"}
     </button>
-  );
-};
+  )
+}

@@ -26,6 +26,15 @@ export class User {
   @Column({ name: 'preferred_payment_method', type: 'varchar', length: 20, nullable: true })
   preferredPaymentMethod?: string;
 
+  @Column({ name: 'kyc_status', type: 'varchar', length: 20, default: "'unverified'" })
+  kycStatus!: 'unverified' | 'pending' | 'verified' | 'rejected';
+
+  @Column({ name: 'kyc_verified_at', type: 'datetime', nullable: true })
+  kycVerifiedAt?: Date;
+
+  @Column({ name: 'stripe_identity_session_id', type: 'varchar', length: 255, nullable: true })
+  stripeIdentitySessionId?: string;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
 

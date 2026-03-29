@@ -10,9 +10,11 @@ import { initializeDatabase } from './config/database';
 // Import routes
 import onrampRoutes from './api/onramp';
 import webhooksRoutes from './api/webhooks';
-// import paymentsRoutes from './api/payments';
-// import payoutsRoutes from './api/payouts';
-// import transactionsRoutes from './api/transactions';
+import paymentsRoutes from './api/payments';
+import payoutsRoutes from './api/payouts';
+import transactionsRoutes from './api/transactions';
+import recoveryRoutes from './api/recovery';
+import feesRoutes from './api/fees';
 
 const app = express();
 
@@ -34,9 +36,11 @@ app.get('/health', (req, res) => {
 // API routes
 app.use('/api/v1/onramp', onrampRoutes);
 app.use('/api/v1/webhooks', webhooksRoutes);
-// app.use('/api/v1/payments', paymentsRoutes);
-// app.use('/api/v1/payouts', payoutsRoutes);
-// app.use('/api/v1/transactions', transactionsRoutes);
+app.use('/api/v1/payments', paymentsRoutes);
+app.use('/api/v1/payouts', payoutsRoutes);
+app.use('/api/v1/transactions', transactionsRoutes);
+app.use('/api/v1/recovery', recoveryRoutes);
+app.use('/api/v1/fees', feesRoutes);
 
 // Error handling
 app.use(errorHandler);

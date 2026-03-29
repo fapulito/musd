@@ -1,0 +1,152 @@
+/* PaymentMethodSelector */
+.pms {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pms__title {
+  margin: 0 0 4px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Individual option card */
+.pms__option {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  text-align: left;
+  padding: 16px;
+  border: 2px solid #dee2e6;
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+.pms__option:hover:not(:disabled) {
+  border-color: #667eea;
+}
+
+.pms__option--active {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+  background: #f5f3ff;
+}
+
+.pms__option--disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Header row: radio + label + badge */
+.pms__option-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pms__radio {
+  font-size: 16px;
+  color: #667eea;
+  flex-shrink: 0;
+}
+
+.pms__label {
+  font-weight: 600;
+  font-size: 15px;
+  color: #333;
+}
+
+.pms__badge {
+  margin-left: auto;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* Description */
+.pms__desc {
+  margin: 6px 0 0 24px;
+  font-size: 13px;
+  color: #6c757d;
+  line-height: 1.4;
+}
+
+/* Fee row */
+.pms__fees {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 10px 0 0 24px;
+  font-size: 13px;
+  color: #495057;
+}
+
+.pms__fee-label {
+  font-weight: 500;
+}
+
+.pms__fee-amount {
+  color: #dc3545;
+  font-variant-numeric: tabular-nums;
+}
+
+.pms__fee-net {
+  margin-left: auto;
+  font-weight: 600;
+  color: #28a745;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Wallet balance hint */
+.pms__balance {
+  margin: 6px 0 0 24px;
+  font-size: 12px;
+  color: #1976d2;
+  font-weight: 500;
+}
+
+/* Unavailable reason */
+.pms__unavailable {
+  margin: 6px 0 0 24px;
+  font-size: 12px;
+  color: #dc3545;
+}
+
+/* Preference note */
+.pms__pref-note {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #888;
+  text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .pms__option {
+    padding: 12px;
+  }
+
+  .pms__fees {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .pms__fee-net {
+    margin-left: 0;
+  }
+}
